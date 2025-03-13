@@ -158,6 +158,7 @@ class DiscordService {
    * @returns {Promise<Object>} - Discord API response
    */
   async sendChecklistNotification(data, webhookUrl = null) {
+    console.log('Sending checklist notification', data);
     const { projectName, repository, branch, commitUrl, checklist, files, commits, mentions } = data;
     
     // Create mentions string - ensure proper Discord mention format
