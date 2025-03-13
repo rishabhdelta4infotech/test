@@ -123,18 +123,45 @@ async function handlePushEvent(payload) {
     // Get recent commits
     const commits = await githubService.getRecentCommits(owner, repo, branch, 10);
     
-    // Extract changed files from commits in the payload
+    // Extract changed files from commits in the payload with change statistics
     const files = payload.commits.reduce((allFiles, commit) => {
-      const added = commit.added || [];
-      const modified = commit.modified || [];
-      const removed = commit.removed || [];
-      console.log("modified----->>", modified);
+      const processFiles = (fileList, type) => {
+        return fileList.map(filename => ({
+          filename,
+          additions: type === 'added' ? 1 : 0,
+          deletions: type === 'removed' ? 1 : 0,
+          changes: 1
+        }));
+      };
+
+      const added = processFiles(commit.added || [], 'added');
+      const modified = processFiles(commit.modified || [], 'modified');
+      const removed = processFiles(commit.removed || [], 'removed');
+      
       return [...allFiles, ...added, ...modified, ...removed];
     }, []);
-   
 
-    // Remove duplicates from files array
-    const uniqueFiles = [...new Set(files)];
+    // Combine duplicate file entries and sum their changes
+    const fileStats = files.reduce((stats, file) => {
+      const existing = stats[file.filename] || {
+        filename: file.filename,
+        additions: 0,
+        deletions: 0,
+        changes: 0
+      };
+      
+      stats[file.filename] = {
+        filename: file.filename,
+        additions: existing.additions + file.additions,
+        deletions: existing.deletions + file.deletions,
+        changes: existing.changes + file.changes
+      };
+      
+      return stats;
+    }, {});
+
+    // Convert back to array and remove duplicates
+    const uniqueFiles = Object.values(fileStats);
     
     // Generate checklist
     const checklist = await aiService.generateChecklist({
