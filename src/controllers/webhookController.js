@@ -93,15 +93,34 @@ async function handlePullRequestEvent(payload) {
  * @param {Object} payload - GitHub webhook payload
  */
 async function handlePushEvent(payload) {
-  console.log('push event-------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-->>',payload);
+  console.log('push event payload:', payload);
   try {
     const { ref, repository } = payload;
     
     // Extract branch name from ref (refs/heads/branch-name)
     const branch = ref.replace('refs/heads/', '');
     
-    // Find matching project configuration
+    // Extract repository information
     const repoFullName = repository.full_name;
+    const [owner, repo] = repoFullName.split('/');
+
+    // Get the before and after commit SHAs
+    const beforeSha = payload.before;
+    const afterSha = payload.after;
+
+    // Get the comparison data from GitHub API
+    const comparison = await githubService.compareCommits(owner, repo, beforeSha, afterSha);
+    
+    // Process files with detailed statistics from the comparison
+    const files = comparison.files.map(file => ({
+      filename: file.filename,
+      additions: file.additions,
+      deletions: file.deletions,
+      changes: file.changes,
+      status: file.status
+    }));
+
+    // Find matching project configuration
     const projectConfig = checklistService.findProjectConfig(repoFullName);
     
     if (!projectConfig) {
@@ -117,75 +136,20 @@ async function handlePushEvent(payload) {
     
     console.log(`Processing push to ${branch} in ${repoFullName}`);
     
-    // Extract repository information
-    const [owner, repo] = repoFullName.split('/');
-    
     // Get recent commits
     const commits = await githubService.getRecentCommits(owner, repo, branch, 10);
-    
-    // Extract changed files from commits in the payload with change statistics
-    const files = payload.commits.reduce((allFiles, commit) => {
-      const processFiles = (fileList, type, commit) => {
-        return fileList.map(filename => {
-          // Count the actual changes from the commit stats if available
-          const stats = commit.stats?.files?.find(f => f.filename === filename) || {};
-          return {
-            filename,
-            additions: stats.additions || (type === 'added' ? 1 : 0),
-            deletions: stats.deletions || (type === 'removed' ? 1 : 0),
-            changes: stats.changes || 1
-          };
-        });
-      };
-
-      const added = processFiles(commit.added || [], 'added', commit);
-      const modified = processFiles(commit.modified || [], 'modified', commit);
-      const removed = processFiles(commit.removed || [], 'removed', commit);
-      
-      return [...allFiles, ...added, ...modified, ...removed];
-    }, []);
-
-    // Combine duplicate file entries and sum their changes
-    const fileStats = files.reduce((stats, file) => {
-      const existing = stats[file.filename] || {
-        filename: file.filename,
-        additions: 0,
-        deletions: 0,
-        changes: 0
-      };
-      
-      stats[file.filename] = {
-        filename: file.filename,
-        additions: existing.additions + file.additions,
-        deletions: existing.deletions + file.deletions,
-        changes: existing.changes + file.changes
-      };
-      
-      return stats;
-    }, {});
-
-    // Convert back to array and format with GitHub-style change indicators
-    const uniqueFiles = Object.values(fileStats).map(file => {
-      const totalChanges = file.additions + file.deletions;
-      const plusMinus = ''.padStart(file.additions, '+').padStart(totalChanges, '-');
-      return {
-        ...file,
-        changeIndicator: plusMinus
-      };
-    });
     
     // Generate checklist
     const checklist = await aiService.generateChecklist({
       projectName: projectConfig.name,
       repository: repoFullName,
       commits,
-      files: uniqueFiles,
+      files,
       projectConfig,
     });
     
-    
     // Assign teams based on file changes
-    const teamAssignments = checklistService.assignTeams(uniqueFiles, projectConfig);
+    const teamAssignments = checklistService.assignTeams(files, projectConfig);
     
     // Send notification to Discord
     await sendDiscordNotification({
@@ -194,7 +158,7 @@ async function handlePushEvent(payload) {
       repository: repoFullName,
       branch,
       commits,
-      files: uniqueFiles,
+      files,
       checklist,
       teamAssignments,
     });
