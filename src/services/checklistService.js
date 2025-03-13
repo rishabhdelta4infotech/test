@@ -93,57 +93,68 @@ class ChecklistService {
 
   /**
    * Assign teams based on file changes
-   * @param {Array} files - List of files changed
+   * @param {Array} files - List of changed files
    * @param {Object} projectConfig - Project configuration
-   * @returns {Object} - Team assignments with Discord IDs to mention
+   * @returns {Object} - Team assignments
    */
   assignTeams(files, projectConfig) {
     const teamAssignments = {};
-    const filePaths = files.map(file => file.filename || file.path);
     
-    // Check each team's file patterns
-    for (const [teamId, team] of Object.entries(projectConfig.teams)) {
-      const { filePatterns, discordIds } = team;
-      
-      // Check if any file matches the team's patterns
-      const matches = filePaths.some(filePath => {
-        return filePatterns.some(pattern => {
-          // Simple glob pattern matching
-          if (pattern.includes('*')) {
-            const regexPattern = pattern
-              .replace(/\./g, '\\.')
-              .replace(/\*/g, '.*');
-            return new RegExp(regexPattern).test(filePath);
-          }
-          
-          // Exact match
-          return filePath === pattern || filePath.includes(pattern);
-        });
-      });
-      
-      // If there's a match, assign the team
-      if (matches) {
-        teamAssignments[teamId] = {
-          discordIds,
-          files: filePaths.filter(filePath => {
-            return filePatterns.some(pattern => {
-              // Simple glob pattern matching
-              if (pattern.includes('*')) {
-                const regexPattern = pattern
-                  .replace(/\./g, '\\.')
-                  .replace(/\*/g, '.*');
-                return new RegExp(regexPattern).test(filePath);
-              }
-              
-              // Exact match
-              return filePath === pattern || filePath.includes(pattern);
-            });
-          }),
+    // Validate inputs
+    if (!Array.isArray(files) || !projectConfig?.teams) {
+      return teamAssignments;
+    }
+
+    // Get file paths
+    const filePaths = files.filter(Boolean).map(file => 
+      typeof file === 'string' ? file : (file.filename || file.path)
+    );
+
+    // For each team in the config
+    Object.entries(projectConfig.teams || {}).forEach(([team, config]) => {
+      // Validate team config
+      if (!config || !Array.isArray(config.filePatterns)) {
+        return;
+      }
+
+      // Check if any files match the team's patterns
+      const matchedFiles = filePaths.filter(filePath => 
+        config.filePatterns.some(pattern => {
+          if (!pattern) return false;
+          return this.matchesPattern(filePath, pattern);
+        })
+      );
+
+      // If files match, add team assignment
+      if (matchedFiles.length > 0) {
+        teamAssignments[team] = {
+          files: matchedFiles,
+          reviewers: config.reviewers || []
         };
       }
-    }
-    
+    });
+
     return teamAssignments;
+  }
+
+  /**
+   * Helper function to match file paths against patterns
+   * @param {string} path - File path
+   * @param {string} pattern - Pattern to match against
+   * @returns {boolean} - Whether the path matches the pattern
+   */
+  matchesPattern(path, pattern) {
+    if (!path || !pattern) {
+      return false;
+    }
+
+    if (pattern.includes('*')) {
+      const regexPattern = pattern
+        .replace(/\./g, '\\.')
+        .replace(/\*/g, '.*');
+      return new RegExp(regexPattern).test(path);
+    }
+    return path === pattern || path.includes(pattern);
   }
 
   /**
