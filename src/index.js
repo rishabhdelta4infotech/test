@@ -29,5 +29,5 @@ const PORT = config.server.port;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Webhook URL: http://your-server-url/api/webhook/github`);
+  console.log(`Webhook URL: https://sxsmg1w4-3000.inc1.devtunnels.ms/webhook/github`);
 }); 
