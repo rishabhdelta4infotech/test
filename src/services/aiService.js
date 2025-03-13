@@ -196,6 +196,11 @@ class AIService {
    * @returns {boolean} - Whether path matches pattern
    */
   matchesPattern(path, pattern) {
+    // Add null checks
+    if (!path || !pattern) {
+      return false;
+    }
+
     if (pattern.includes('*')) {
       const regexPattern = pattern
         .replace(/\./g, '\\.')
@@ -214,35 +219,36 @@ class AIService {
   generateRuleBasedChecklist(files, projectConfig) {
     const checklist = [];
     
-    if (!projectConfig || !projectConfig.checklistRules || !files) {
+    // Add more thorough validation
+    if (!Array.isArray(files) || !projectConfig?.checklistRules?.length) {
       return checklist;
     }
     
-    // Get file paths
-    const filePaths = files.map(file => file.filename || file.path);
+    // Get file paths with validation
+    const filePaths = files
+      .filter(file => file && (file.filename || file.path))
+      .map(file => file.filename || file.path);
+    
+    if (filePaths.length === 0) {
+      return checklist;
+    }
     
     // Check each rule against the files
     for (const rule of projectConfig.checklistRules) {
+      // Validate rule structure
+      if (!rule || !rule.pattern || !Array.isArray(rule.items)) {
+        continue;
+      }
+      
       const { pattern, items } = rule;
       
       // Check if any file matches the pattern
-      const matches = filePaths.some(filePath => {
-        // Simple glob pattern matching
-        if (pattern.includes('*')) {
-          const regexPattern = pattern
-            .replace(/\./g, '\\.')
-            .replace(/\*/g, '.*');
-          return new RegExp(regexPattern).test(filePath);
-        }
-        
-        // Exact match
-        return filePath === pattern || filePath.includes(pattern);
-      });
+      const matches = filePaths.some(filePath => this.matchesPattern(filePath, pattern));
       
       // If there's a match, add the checklist items
       if (matches) {
         for (const item of items) {
-          if (!checklist.includes(item)) {
+          if (item && !checklist.includes(item)) {
             checklist.push(item);
           }
         }
