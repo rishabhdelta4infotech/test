@@ -122,24 +122,30 @@ async function handlePushEvent(payload) {
     // Get recent commits
     const commits = await githubService.getRecentCommits(owner, repo, branch, 10);
     
-    // TODO: Implement logic to get files changed in the push
-    // This is more complex for push events than for pull requests
-    // For now, we'll use an empty array
-    const files = [];
+    // Extract changed files from commits in the payload
+    const files = payload.commits.reduce((allFiles, commit) => {
+      const added = commit.added || [];
+      const modified = commit.modified || [];
+      const removed = commit.removed || [];
+      return [...allFiles, ...added, ...modified, ...removed];
+    }, []);
+
+    // Remove duplicates from files array
+    const uniqueFiles = [...new Set(files)];
     
     // Generate checklist
     const checklist = await aiService.generateChecklist({
       projectName: projectConfig.name,
       repository: repoFullName,
       commits,
-      files,
+      files: uniqueFiles,
       projectConfig,
     });
     console.log('checklist----->>', checklist);
-    console.log("files----->>", files);
+    console.log("files----->>", uniqueFiles);
     
     // Assign teams based on file changes
-    const teamAssignments = checklistService.assignTeams(files, projectConfig);
+    const teamAssignments = checklistService.assignTeams(uniqueFiles, projectConfig);
     
     // Send notification to Discord
     await sendDiscordNotification({
@@ -148,7 +154,7 @@ async function handlePushEvent(payload) {
       repository: repoFullName,
       branch,
       commits,
-      files,
+      files: uniqueFiles,
       checklist,
       teamAssignments,
     });
