@@ -164,33 +164,28 @@ class DiscordService {
     // Create mentions string - ensure proper Discord mention format
     const mentionsContent = mentions && mentions.length > 0 
       ? mentions.map(mention => {
-          // If it's already a properly formatted mention, use it as is
-          if (mention.startsWith('<@') && mention.endsWith('>')) {
-            return mention;
-          }
-          // If it's a role mention
-          if (mention.startsWith('@')) {
-            return `<@&${mention.substring(1)}>`;
-          }
-          // If it's just an ID
+          if (mention.startsWith('<@') && mention.endsWith('>')) return mention;
+          if (mention.startsWith('@')) return `<@&${mention.substring(1)}>`;
           return `<@${mention}>`;
         }).join(' ') + ` New changes in ${repository}!`
       : '';
 
-    // Format file changes
-    const fileChanges = files && files.length > 0
-      ? files.map(file => {
-          const path = file.filename || file.path;
-          const type = path.split('.').pop().toLowerCase();
-          return `- ${path} (${type})`;
-        }).join('\n')
+    // Format file changes with better validation
+    const fileChanges = Array.isArray(files) && files.length > 0
+      ? files.filter(file => file && (typeof file === 'string' || file.filename || file.path))
+          .map(file => {
+            const path = typeof file === 'string' ? file : (file.filename || file.path);
+            if (!path) return '- Unknown file';
+            const type = path.split('.').pop().toLowerCase();
+            return `- ${path} (${type})`;
+          }).join('\n')
       : '- No files changed';
 
-    // Format commit messages
-    const commitMessages = commits && commits.length > 0
-      ? commits.map(commit => 
-          `- ${commit.commit.message}`
-        ).join('\n')
+    // Format commit messages with better validation
+    const commitMessages = Array.isArray(commits) && commits.length > 0
+      ? commits.filter(commit => commit?.commit?.message)
+          .map(commit => `- ${commit.commit.message}`)
+          .join('\n')
       : '- No commit messages available';
 
     // Format the structured checklist
