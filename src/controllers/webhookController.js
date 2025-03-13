@@ -125,18 +125,22 @@ async function handlePushEvent(payload) {
     
     // Extract changed files from commits in the payload with change statistics
     const files = payload.commits.reduce((allFiles, commit) => {
-      const processFiles = (fileList, type) => {
-        return fileList.map(filename => ({
-          filename,
-          additions: type === 'added' ? 1 : 0,
-          deletions: type === 'removed' ? 1 : 0,
-          changes: 1
-        }));
+      const processFiles = (fileList, type, commit) => {
+        return fileList.map(filename => {
+          // Count the actual changes from the commit stats if available
+          const stats = commit.stats?.files?.find(f => f.filename === filename) || {};
+          return {
+            filename,
+            additions: stats.additions || (type === 'added' ? 1 : 0),
+            deletions: stats.deletions || (type === 'removed' ? 1 : 0),
+            changes: stats.changes || 1
+          };
+        });
       };
 
-      const added = processFiles(commit.added || [], 'added');
-      const modified = processFiles(commit.modified || [], 'modified');
-      const removed = processFiles(commit.removed || [], 'removed');
+      const added = processFiles(commit.added || [], 'added', commit);
+      const modified = processFiles(commit.modified || [], 'modified', commit);
+      const removed = processFiles(commit.removed || [], 'removed', commit);
       
       return [...allFiles, ...added, ...modified, ...removed];
     }, []);
@@ -160,8 +164,15 @@ async function handlePushEvent(payload) {
       return stats;
     }, {});
 
-    // Convert back to array and remove duplicates
-    const uniqueFiles = Object.values(fileStats);
+    // Convert back to array and format with GitHub-style change indicators
+    const uniqueFiles = Object.values(fileStats).map(file => {
+      const totalChanges = file.additions + file.deletions;
+      const plusMinus = ''.padStart(file.additions, '+').padStart(totalChanges, '-');
+      return {
+        ...file,
+        changeIndicator: plusMinus
+      };
+    });
     
     // Generate checklist
     const checklist = await aiService.generateChecklist({

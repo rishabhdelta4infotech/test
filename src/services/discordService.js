@@ -169,7 +169,7 @@ class DiscordService {
         }).join(' ') + ` New changes in ${repository}!`
       : '';
 
-    // Format file changes with change statistics
+    // Format file changes with GitHub-style change statistics
     const fileChanges = Array.isArray(files) && files.length > 0
       ? files.filter(file => file && (typeof file === 'string' || file.filename || file.path))
           .map(file => {
@@ -182,17 +182,15 @@ class DiscordService {
             const path = file.filename || file.path;
             if (!path) return '- Unknown file';
             
-            const type = path.split('.').pop().toLowerCase();
             const additions = file.additions || 0;
             const deletions = file.deletions || 0;
-            const changes = file.changes || additions + deletions;
+            const totalChanges = additions + deletions;
             
-            // Format with GitHub-style change indicators
-            const changeStats = [];
-            if (additions > 0) changeStats.push(`+${additions}`);
-            if (deletions > 0) changeStats.push(`-${deletions}`);
+            // Create GitHub-style change indicator
+            const changeBar = ''.padStart(additions, '+').padStart(totalChanges, '-');
             
-            return `- ${path} (${type}) \`${changeStats.join(' ')}\` changes: ${changes}`;
+            // Format the line like GitHub's diff stat
+            return `${path.padEnd(40)} | ${String(totalChanges).padStart(4)} ${changeBar}`;
           }).join('\n')
       : '- No files changed';
 
