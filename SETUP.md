@@ -72,7 +72,7 @@ Each project has its own configuration file in the `src/config/projects` directo
 2. Edit the new configuration file with your project's settings:
    ```javascript
    module.exports = {
-     name: 'Test Project',
+     name: 'Your Project',
      repository: 'owner/repo-name',
      monitoredBranches: ['master', 'development'],
      teams: {

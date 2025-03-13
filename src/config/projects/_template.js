@@ -11,6 +11,30 @@ module.exports = {
   
   // Repository full name (owner/repo)
   repository: 'owner/repo-name',
+
+  // Project metadata - helps contextualize changes
+  metadata: {
+    // Project description and purpose
+    description: 'Brief description of what this project does',
+    // Project type (e.g., frontend, backend, full-stack, library, etc.)
+    type: 'full-stack',
+    // Project complexity level (1-5, where 1 is least complex)
+    complexity: 3,
+    // Critical paths that require more thorough review
+    criticalPaths: [
+      'src/auth/**',
+      'src/core/**',
+      'src/database/migrations/**'
+    ],
+    // Paths that typically need minimal review
+    lowRiskPaths: [
+      '*.md',
+      'docs/**',
+      'examples/**',
+      '.github/**/*.md'
+    ],
+    skipTesterChecklist: true,
+  },
   
   // Branches that trigger notifications when merged into
   monitoredBranches: ['main', 'master', 'development'],
@@ -70,16 +94,24 @@ module.exports = {
     }
   },
   
-  // Custom checklist items based on file patterns
+  // Custom checklist rules based on file patterns
   checklistRules: [
+    // Documentation changes
+    {
+      pattern: '*.md',
+      items: [
+        'Verify formatting and links are correct',
+        'Check for spelling and grammar'
+      ]
+    },
+    
     // Dependencies changes
     {
       pattern: 'package.json',
       items: [
         'Verify all new dependencies are necessary and secure',
         'Check for breaking changes in updated dependencies',
-        'Update documentation if new setup steps are required',
-        'Ensure package-lock.json is updated'
+        'Update documentation if new setup steps are required'
       ]
     },
     
@@ -89,9 +121,7 @@ module.exports = {
       items: [
         'Ensure all endpoints have proper validation',
         'Verify error handling is implemented',
-        'Check that authentication is properly applied',
-        'Update API documentation',
-        'Add/update tests for new endpoints'
+        'Check that authentication is properly applied'
       ]
     },
     

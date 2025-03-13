@@ -164,6 +164,8 @@ async function sendDiscordNotification(result) {
       checklist,
       teamAssignments,
       pullRequest,
+      files,
+      commits
     } = result;
     
     // Get Discord mentions
@@ -182,6 +184,8 @@ async function sendDiscordNotification(result) {
       commitUrl,
       checklist,
       mentions,
+      files,
+      commits
     });
     
     console.log(`Sent Discord notification for ${repository} (${branch})`);
