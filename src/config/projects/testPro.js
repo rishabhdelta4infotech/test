@@ -3,7 +3,7 @@
  */
 
 module.exports = {
-    name: 'YourGPT',
+    name: 'Test Project',
     repository: 'rishabhdelta4infotech/test',
     // Branches that trigger notifications when merged into
     monitoredBranches: ['master','main', 'development'],
