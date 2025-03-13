@@ -1,0 +1,30 @@
+{
+  "name": "github-merge-checklist-bot",
+  "version": "1.0.0",
+  "description": "A GitHub bot that generates checklists based on previous commits when merging to master or development branches, and notifies teams on Discord.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "github",
+    "bot",
+    "checklist",
+    "discord",
+    "webhook"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "octokit": "^3.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
