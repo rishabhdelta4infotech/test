@@ -142,8 +142,7 @@ async function handlePushEvent(payload) {
       files: uniqueFiles,
       projectConfig,
     });
-    console.log('checklist----->>', checklist);
-    console.log("files----->>", uniqueFiles);
+    
     
     // Assign teams based on file changes
     const teamAssignments = checklistService.assignTeams(uniqueFiles, projectConfig);
