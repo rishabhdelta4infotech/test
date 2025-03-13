@@ -92,6 +92,7 @@ async function handlePullRequestEvent(payload) {
  * @param {Object} payload - GitHub webhook payload
  */
 async function handlePushEvent(payload) {
+  console.log('push event-------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-->>');
   try {
     const { ref, repository } = payload;
     
