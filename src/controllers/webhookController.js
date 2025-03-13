@@ -93,34 +93,15 @@ async function handlePullRequestEvent(payload) {
  * @param {Object} payload - GitHub webhook payload
  */
 async function handlePushEvent(payload) {
-  console.log('push event payload:', payload);
+  console.log('push event-------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-->>',payload);
   try {
     const { ref, repository } = payload;
     
     // Extract branch name from ref (refs/heads/branch-name)
     const branch = ref.replace('refs/heads/', '');
     
-    // Extract repository information
-    const repoFullName = repository.full_name;
-    const [owner, repo] = repoFullName.split('/');
-
-    // Get the before and after commit SHAs
-    const beforeSha = payload.before;
-    const afterSha = payload.after;
-
-    // Get the comparison data from GitHub API
-    const comparison = await githubService.compareCommits(owner, repo, beforeSha, afterSha);
-    
-    // Process files with detailed statistics from the comparison
-    const files = comparison.files.map(file => ({
-      filename: file.filename,
-      additions: file.additions,
-      deletions: file.deletions,
-      changes: file.changes,
-      status: file.status
-    }));
-
     // Find matching project configuration
+    const repoFullName = repository.full_name;
     const projectConfig = checklistService.findProjectConfig(repoFullName);
     
     if (!projectConfig) {
@@ -136,20 +117,37 @@ async function handlePushEvent(payload) {
     
     console.log(`Processing push to ${branch} in ${repoFullName}`);
     
+    // Extract repository information
+    const [owner, repo] = repoFullName.split('/');
+    
     // Get recent commits
     const commits = await githubService.getRecentCommits(owner, repo, branch, 10);
+    
+    // Extract changed files from commits in the payload
+    const files = payload.commits.reduce((allFiles, commit) => {
+      const added = commit.added || [];
+      const modified = commit.modified || [];
+      const removed = commit.removed || [];
+      console.log("modified----->>", modified);
+      return [...allFiles, ...added, ...modified, ...removed];
+    }, []);
+   
+
+    // Remove duplicates from files array
+    const uniqueFiles = [...new Set(files)];
     
     // Generate checklist
     const checklist = await aiService.generateChecklist({
       projectName: projectConfig.name,
       repository: repoFullName,
       commits,
-      files,
+      files: uniqueFiles,
       projectConfig,
     });
     
+    
     // Assign teams based on file changes
-    const teamAssignments = checklistService.assignTeams(files, projectConfig);
+    const teamAssignments = checklistService.assignTeams(uniqueFiles, projectConfig);
     
     // Send notification to Discord
     await sendDiscordNotification({
@@ -158,7 +156,7 @@ async function handlePushEvent(payload) {
       repository: repoFullName,
       branch,
       commits,
-      files,
+      files: uniqueFiles,
       checklist,
       teamAssignments,
     });

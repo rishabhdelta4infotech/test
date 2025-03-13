@@ -126,30 +126,6 @@ class GitHubService {
   verifyWebhookSignature(signature, payload) {
     return verifyGitHubSignature(signature, payload);
   }
-
-  /**
-   * Compare two commits to get detailed file changes
-   * @param {string} owner - Repository owner
-   * @param {string} repo - Repository name
-   * @param {string} base - Base commit SHA
-   * @param {string} head - Head commit SHA
-   * @returns {Promise<Object>} - Comparison data
-   */
-  async compareCommits(owner, repo, base, head) {
-    try {
-      const { data } = await this.octokit.rest.repos.compareCommits({
-        owner,
-        repo,
-        base,
-        head,
-      });
-      
-      return data;
-    } catch (error) {
-      console.error('Error comparing commits:', error);
-      throw error;
-    }
-  }
 }
 
 module.exports = new GitHubService(); 

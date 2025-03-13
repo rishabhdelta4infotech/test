@@ -160,7 +160,7 @@ class DiscordService {
   async sendChecklistNotification(data, webhookUrl = null) {
     const { projectName, repository, branch, commitUrl, checklist, files, commits, mentions } = data;
     
-    // Create mentions string
+    // Create mentions string - ensure proper Discord mention format
     const mentionsContent = mentions && mentions.length > 0 
       ? mentions.map(mention => {
           if (mention.startsWith('<@') && mention.endsWith('>')) return mention;
@@ -169,38 +169,18 @@ class DiscordService {
         }).join(' ') + ` New changes in ${repository}!`
       : '';
 
-    // Format file changes with GitHub-style change statistics and colors
+    // Format file changes with better validation
     const fileChanges = Array.isArray(files) && files.length > 0
       ? files.filter(file => file && (typeof file === 'string' || file.filename || file.path))
           .map(file => {
-            // Handle string-only file entries
-            if (typeof file === 'string') {
-              return `- ${file}`;
-            }
-
-            // Handle file objects with change statistics
-            const path = file.filename || file.path;
+            const path = typeof file === 'string' ? file : (file.filename || file.path);
             if (!path) return '- Unknown file';
-            
-            const additions = file.additions || 0;
-            const deletions = file.deletions || 0;
-            const totalChanges = additions + deletions;
-            
-            // Create colored change indicators
-            let changeStats = '';
-            if (additions > 0) {
-              changeStats += `\`\`\`diff\n+${additions}\n\`\`\``;
-            }
-            if (deletions > 0) {
-              changeStats += `\`\`\`diff\n-${deletions}\n\`\`\``;
-            }
-            
-            // Format the line like GitHub's diff stat with colored numbers
-            return `${path.padEnd(40)} | ${String(totalChanges).padStart(4)} ${changeStats}`;
+            const type = path.split('.').pop().toLowerCase();
+            return `- ${path} (${type})`;
           }).join('\n')
       : '- No files changed';
 
-    // Format commit messages
+    // Format commit messages with better validation
     const commitMessages = Array.isArray(commits) && commits.length > 0
       ? commits.filter(commit => commit?.commit?.message)
           .map(commit => `- ${commit.commit.message}`)
