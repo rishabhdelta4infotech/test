@@ -92,7 +92,7 @@ async function handlePullRequestEvent(payload) {
  * @param {Object} payload - GitHub webhook payload
  */
 async function handlePushEvent(payload) {
-  console.log('push event-------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-->>');
+  console.log('push event-------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-->>',payload);
   try {
     const { ref, repository } = payload;
     
@@ -129,7 +129,7 @@ async function handlePushEvent(payload) {
       const removed = commit.removed || [];
       return [...allFiles, ...added, ...modified, ...removed];
     }, []);
-    console.log("files----->>", files);
+   
 
     // Remove duplicates from files array
     const uniqueFiles = [...new Set(files)];
