@@ -127,6 +127,7 @@ async function handlePushEvent(payload) {
       const added = commit.added || [];
       const modified = commit.modified || [];
       const removed = commit.removed || [];
+      console.log("modified----->>", modified);
       return [...allFiles, ...added, ...modified, ...removed];
     }, []);
    
