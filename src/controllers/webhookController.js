@@ -129,6 +129,7 @@ async function handlePushEvent(payload) {
       const removed = commit.removed || [];
       return [...allFiles, ...added, ...modified, ...removed];
     }, []);
+    console.log("files----->>", files);
 
     // Remove duplicates from files array
     const uniqueFiles = [...new Set(files)];
