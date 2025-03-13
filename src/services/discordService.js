@@ -160,7 +160,7 @@ class DiscordService {
   async sendChecklistNotification(data, webhookUrl = null) {
     const { projectName, repository, branch, commitUrl, checklist, files, commits, mentions } = data;
     
-    // Create mentions string - ensure proper Discord mention format
+    // Create mentions string
     const mentionsContent = mentions && mentions.length > 0 
       ? mentions.map(mention => {
           if (mention.startsWith('<@') && mention.endsWith('>')) return mention;
@@ -169,18 +169,34 @@ class DiscordService {
         }).join(' ') + ` New changes in ${repository}!`
       : '';
 
-    // Format file changes with better validation
+    // Format file changes with change statistics
     const fileChanges = Array.isArray(files) && files.length > 0
       ? files.filter(file => file && (typeof file === 'string' || file.filename || file.path))
           .map(file => {
-            const path = typeof file === 'string' ? file : (file.filename || file.path);
+            // Handle string-only file entries
+            if (typeof file === 'string') {
+              return `- ${file}`;
+            }
+
+            // Handle file objects with change statistics
+            const path = file.filename || file.path;
             if (!path) return '- Unknown file';
+            
             const type = path.split('.').pop().toLowerCase();
-            return `- ${path} (${type})`;
+            const additions = file.additions || 0;
+            const deletions = file.deletions || 0;
+            const changes = file.changes || additions + deletions;
+            
+            // Format with GitHub-style change indicators
+            const changeStats = [];
+            if (additions > 0) changeStats.push(`+${additions}`);
+            if (deletions > 0) changeStats.push(`-${deletions}`);
+            
+            return `- ${path} (${type}) \`${changeStats.join(' ')}\` changes: ${changes}`;
           }).join('\n')
       : '- No files changed';
 
-    // Format commit messages with better validation
+    // Format commit messages
     const commitMessages = Array.isArray(commits) && commits.length > 0
       ? commits.filter(commit => commit?.commit?.message)
           .map(commit => `- ${commit.commit.message}`)
