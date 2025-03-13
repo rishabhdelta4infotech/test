@@ -69,6 +69,8 @@ async function handlePullRequestEvent(payload) {
       
       // Process the pull request
       const result = await checklistService.processPullRequest(payload);
+      console.log('Result----->>', result);
+
       
       if (result.success) {
         // Send notification to Discord
