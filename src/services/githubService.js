@@ -137,14 +137,14 @@ class GitHubService {
    */
   async compareCommits(owner, repo, base, head) {
     try {
-      const response = await this.octokit.repos.compareCommits({
+      const { data } = await this.octokit.rest.repos.compareCommits({
         owner,
         repo,
         base,
         head,
       });
       
-      return response.data;
+      return data;
     } catch (error) {
       console.error('Error comparing commits:', error);
       throw error;
