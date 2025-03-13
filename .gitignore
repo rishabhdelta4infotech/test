@@ -45,3 +45,4 @@ coverage
 # Project specific
 config/local.js 
 package-lock.json
+.qodo
