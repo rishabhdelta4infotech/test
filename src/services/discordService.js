@@ -191,7 +191,7 @@ class DiscordService {
     let changeSummarySection = '';
     let developerSection = '';
     let testerSection = '';
-
+    console.log("checklist----->>", checklist);
     // Handle change summary section
     if (checklist.changeSummary && !checklist.changeSummary.includes('⚠️')) {
       changeSummarySection = `**Change Summary:**\n${checklist.changeSummary}\n\n` +

@@ -32,6 +32,7 @@ async function handleWebhook(req, res) {
         return res.status(401).json({ error: 'Invalid signature' });
       }
     }
+    console.log("event----->>", event);
     
     // Handle different event types
     switch (event) {
@@ -60,7 +61,7 @@ async function handleWebhook(req, res) {
  * @param {Object} payload - GitHub webhook payload
  */
 async function handlePullRequestEvent(payload) {
-  console.log('Payload-------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-->>');
+  console.log('Payload-------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', payload);
   try {
     const { action, pull_request } = payload;
     
