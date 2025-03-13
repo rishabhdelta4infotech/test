@@ -3,7 +3,7 @@
  */
 
 module.exports = {
-  name: 'YourGPT Core APIs',
+  name: 'YourGPT Core 3424324324APIs',
   repository: 'YourGPT/yourgpt-core-apis',
 
   // Add metadata for better context

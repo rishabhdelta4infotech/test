@@ -7,7 +7,7 @@
 
 module.exports = {
     // Project name (displayed in notifications)
-    name: 'New Test Product 232',
+    name: 'New Test Product 23223434',
     
     // Repository full name (owner/repo)
     repository: 'rishabhdelta4infotech/testProduct',

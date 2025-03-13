@@ -3,7 +3,7 @@
  */
 
 module.exports = {
-    name: 'Test Project',
+    name: 'Test Proje3244243ct',
     repository: 'rishabhdelta4infotech/test',
     // Branches that trigger notifications when merged into
     monitoredBranches: ['master','main', 'development'],

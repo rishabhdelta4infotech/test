@@ -4,7 +4,7 @@
 
 module.exports = {
   name: 'YourGPT',
-  repository: 'YourGPT/test',
+  repository: 'YourG324324PT/test',
   // Branches that trigger notifications when merged into
   monitoredBranches: ['master','main', 'development'],
   // Team mappings - who gets notified for which types of changes
